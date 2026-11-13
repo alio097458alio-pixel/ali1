@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KORA LIVE | منصة كرة القدم المتكاملة</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#090e1a" />
+  <!-- مكتبة تشغيل البث المباشر HLS و DASH -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+</head>
+<body>
+  <!-- الشريط العلوي -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <div class="brand" onclick="navigateTo('home')">
+        <div class="brand-badge">⚽</div>
+        <span>KORA <span style="color:var(--primary-green)">LIVE</span></span>
+      </div>
+
+      <ul class="nav-links">
+        <li><button class="nav-btn active" data-page="home">الرئيسية</button></li>
+        <li><button class="nav-btn" data-page="matches">جدول المباريات</button></li>
+        <li><button class="nav-btn" data-page="leagues">الدوريات</button></li>
+        <li><button class="nav-btn" data-page="news">الأخبار</button></li>
+        <li><button class="nav-btn" data-page="favorites">المفضلة</button></li>
+        <li><button class="nav-btn" data-page="plans">الباقات</button></li>
+      </ul>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="authBtn" class="btn btn-primary">تسجيل الدخول</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-bottom: 60px;">
+    <!-- الصفحة الرئيسية -->
+    <section id="page-home" class="page-section">
+      <div class="hero-banner">
+        <div>
+          <h1 class="hero-title">منصة KORA LIVE الرياضية</h1>
+          <p class="hero-sub">نتائج مباشرة لحظة بلحظة من محركات البحث، إحصائيات شاملة، ترتيب الدوريات، وأخبار كرة القدم العالمية والعربية.</p>
+        </div>
+        <button class="btn btn-primary" onclick="navigateTo('plans')">ترقية للباقة المميزة 👑</button>
+      </div>
+
+      <!-- شريط المباريات المباشرة حاليًا -->
+      <div class="section-header">
+        <h2 class="section-title">مباشر الآن</h2>
+      </div>
+      <div id="liveTicker" class="live-strip">جاري تحميل المباريات المباشرة...</div>
+
+      <!-- مساحة إعلانية / راعي (تختفي تلقائيًا لمشتركي الباقة المميزة) -->
+      <div id="homeTopAd" class="ad-slot"></div>
+
+      <!-- مباريات اليوم / الغد / القادمة -->
+      <div class="section-header">
+        <h2 class="section-title">مباريات اليوم والغد</h2>
+        <button class="btn btn-outline" onclick="navigateTo('matches')">عرض الجدول الكامل</button>
+      </div>
+      <div id="homeTodayMatches" class="grid-2"></div>
+
+      <!-- أكثر الدوريات متابعة -->
+      <div class="section-header">
+        <h2 class="section-title">أكثر الدوريات متابعة</h2>
+      </div>
+      <div id="homeLeagues" class="grid-leagues"></div>
+
+      <!-- أهم أخبار كرة القدم -->
+      <div class="section-header">
+        <h2 class="section-title">أهم أخبار كرة القدم</h2>
+        <button class="btn btn-outline" onclick="navigateTo('news')">كل الأخبار</button>
+      </div>
+      <div id="homeNews" class="grid-3"></div>
+    </section>
+
+    <!-- صفحة جدول المباريات -->
+    <section id="page-matches" class="page-section hidden">
+      <div class="section-header">
+        <h2 class="section-title">جدول المباريات</h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="date" id="datePicker" class="form-control" style="width:auto;" />
+          <select id="leagueFilter" class="form-control" style="width:auto;">
+            <option value="all">كل الدوريات</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-filter="today">اليوم</button>
+        <button class="tab-btn" data-filter="live">مباشرة الآن</button>
+        <button class="tab-btn" data-filter="tomorrow">الغد</button>
+        <button class="tab-btn" data-filter="yesterday">الأمس</button>
+        <button class="tab-btn" data-filter="ended">المنتهية</button>
+      </div>
+      <div id="scheduleList" class="grid-2"></div>
+    </section>
+
+    <!-- صفحة تفاصيل ومشاهدة المباراة -->
+    <section id="page-match-detail" class="page-section hidden">
+      <button class="btn btn-outline" onclick="navigateTo('matches')" style="margin-top:16px;">← العودة للمباريات</button>
+      <div id="matchDetailHeader" class="card" style="margin:16px 0;"></div>
+
+      <!-- مشغل البث المرخص -->
+      <div id="streamSection" class="card" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;">البث المباشر للمباراة</h3>
+        <div id="streamFallbackMsg" class="hidden" style="padding:20px; text-align:center; background:var(--bg-dark); border-radius:10px;"></div>
+        <div id="playerContainer" class="hidden">
+          <div class="player-wrapper">
+            <video id="koraVideo" controls playsinline></video>
+          </div>
+          <div class="player-controls-bar">
+            <span id="streamStatusBadge" class="badge badge-live">متصل بالبث</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <label style="font-size:0.85rem;">الجودة:</label>
+              <select id="qualitySelect" class="form-control" style="width:auto; padding:5px 10px;"></select>
+              <button class="btn btn-outline" onclick="retryStream()">إعادة المحاولة</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- الإحصائيات والأحداث -->
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-bottom:12px;">إحصائيات المباراة</h3>
+          <div id="matchStatsBox"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:12px;">أحداث المباراة بالتوقيت</h3>
+          <div id="matchEventsBox"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- صفحة الدوريات والترتيب -->
+    <section id="page-leagues" class="page-section hidden">
+      <div class="section-header">
+        <h2 class="section-title">الدوريات والبطولات</h2>
+      </div>
+      <div id="leaguesGrid" class="grid-leagues" style="margin-bottom:24px;"></div>
+
+      <div id="leagueDetailsBox" class="card">
+        <h3 id="selectedLeagueTitle" style="margin-bottom:12px;">جدول ترتيب الفرق</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>الفريق</th><th>لعب</th><th>فاز</th><th>تعادل</th><th>خسر</th><th>له</th><th>عليه</th><th>+/-</th><th>النقاط</th>
+              </tr>
+            </thead>
+            <tbody id="standingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- صفحة الأخبار -->
+    <section id="page-news" class="page-section hidden">
+      <div class="section-header"><h2 class="section-title">الأخبار الرياضية</h2></div>
+      <div id="newsMidAd" class="ad-slot"></div>
+      <div id="allNewsGrid" class="grid-3"></div>
+    </section>
+
+    <!-- صفحة المفضلة -->
+    <section id="page-favorites" class="page-section hidden">
+      <div class="section-header"><h2 class="section-title">مفضلتي والتنبيهات المخصصة</h2></div>
+      <div id="favoritesContent" class="card"></div>
+    </section>
+
+    <!-- صفحة الباقات والاشتراكات -->
+    <section id="page-plans" class="page-section hidden">
+      <div class="section-header"><h2 class="section-title">باقات الاشتراك الشهرية</h2></div>
+      <div id="plansGrid" class="grid-3"></div>
+    </section>
+  </main>
+
+  <!-- نافذة تسجيل الدخول / الحساب -->
+  <div id="authModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 id="authModalTitle">تسجيل الدخول إلى KORA LIVE</h3>
+        <button class="btn btn-outline" onclick="closeAuthModal()">✕</button>
+      </div>
+      <form id="authForm">
+        <div id="registerNameGroup" class="form-group hidden">
+          <label>الاسم الكامل</label>
+          <input type="text" id="authName" class="form-control" placeholder="أحمد محمد" />
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="authEmail" class="form-control" required placeholder="user@example.com" />
+        </div>
+        <div class="form-group">
+          <label>كلمة المرور</label>
+          <input type="password" id="authPassword" class="form-control" required minlength="6" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">متابعة</button>
+      </form>
+      <p style="text-align:center; margin-top:12px; font-size:0.85rem; color:var(--text-muted);">
+        <span id="toggleAuthMode" style="color:var(--primary-green); cursor:pointer;">ليس لديك حساب؟ أنشئ حسابًا جديدًا</span>
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
