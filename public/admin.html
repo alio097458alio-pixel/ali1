@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة إدارة KORA LIVE</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <div class="brand">
+        <div class="brand-badge">⚙</div>
+        <span>إدارة KORA LIVE</span>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button id="syncGoogleBtn" class="btn btn-primary">🔄 مزامنة جوجل الآن</button>
+        <a href="index.html" class="btn btn-outline" style="text-decoration:none;">عرض التطبيق</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding:24px 16px;">
+    <!-- إحصائيات عامة -->
+    <div class="grid-3" style="margin-bottom:24px;">
+      <div class="card"><h4>إجمالي المباريات</h4><h2 id="kpiMatches" style="color:var(--primary-green)">0</h2></div>
+      <div class="card"><h4>إجمالي الأخبار</h4><h2 id="kpiNews" style="color:var(--primary-green)">0</h2></div>
+      <div class="card"><h4>المستخدمون المسجلون</h4><h2 id="kpiUsers" style="color:var(--primary-green)">0</h2></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showAdminTab('matches', this)">إدارة المباريات</button>
+      <button class="tab-btn" onclick="showAdminTab('streams', this)">مصادر البث المرخصة</button>
+      <button class="tab-btn" onclick="showAdminTab('news', this)">الأخبار</button>
+      <button class="tab-btn" onclick="showAdminTab('ads', this)">الإعلانات والرعاة</button>
+      <button class="tab-btn" onclick="showAdminTab('push', this)">الإشعارات</button>
+    </div>
+
+    <!-- إدارة المباريات -->
+    <section id="tab-matches" class="admin-tab card">
+      <h3 style="margin-bottom:14px;">إضافة / تحديث مباراة</h3>
+      <form id="adminMatchForm" class="grid-3" style="margin-bottom:20px;">
+        <input id="mLeague" class="form-control" placeholder="اسم البطولة" required />
+        <input id="mHome" class="form-control" placeholder="الفريق المستضيف" required />
+        <input id="mAway" class="form-control" placeholder="الفريق الضيف" required />
+        <input id="mHomeScore" type="number" class="form-control" value="0" />
+        <input id="mAwayScore" type="number" class="form-control" value="0" />
+        <select id="mStatus" class="form-control">
+          <option value="لم تبدأ">لم تبدأ</option>
+          <option value="مباشرة">مباشرة</option>
+          <option value="استراحة">استراحة</option>
+          <option value="انتهت">انتهت</option>
+        </select>
+        <button class="btn btn-primary" type="submit">حفظ المباراة</button>
+      </form>
+      <div id="adminMatchesList"></div>
+    </section>
+
+    <!-- إدارة مصادر البث المرخصة -->
+    <section id="tab-streams" class="admin-tab card hidden">
+      <h3 style="margin-bottom:14px;">إضافة مصدر بث مرخص</h3>
+      <form id="adminStreamForm" class="grid-2" style="margin-bottom:20px;">
+        <input id="sMatchId" class="form-control" placeholder="معرف المباراة (Match ID)" required />
+        <input id="sUrl" class="form-control" placeholder="رابط البث (.m3u8 / .mpd / .mp4)" required />
+        <select id="sType" class="form-control">
+          <option value="HLS">HLS</option>
+          <option value="DASH">DASH</option>
+          <option value="MP4">MP4</option>
+        </select>
+        <input id="sRegions" class="form-control" placeholder="الدول المسموحة (مثال: EG,SA أو ALL)" value="ALL" />
+        <input id="sExpiry" type="date" class="form-control" required />
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input id="sPremium" type="checkbox" /> حصري للمشتركين (Gold / Premium)
+        </label>
+        <button class="btn btn-primary" type="submit">إضافة مصدر البث</button>
+      </form>
+    </section>
+
+    <!-- إدارة الأخبار -->
+    <section id="tab-news" class="admin-tab card hidden">
+      <h3 style="margin-bottom:14px;">إضافة خبر يدوي</h3>
+      <form id="adminNewsForm" style="display:grid; gap:10px; margin-bottom:18px;">
+        <input id="nTitle" class="form-control" placeholder="عنوان الخبر" required />
+        <textarea id="nDesc" class="form-control" placeholder="تفاصيل الخبر"></textarea>
+        <input id="nImage" class="form-control" placeholder="رابط الصورة" />
+        <input id="nSource" class="form-control" placeholder="المصدر" />
+        <button class="btn btn-primary" type="submit">نشر الخبر</button>
+      </form>
+    </section>
+
+    <!-- إدارة الرعاة والإعلانات -->
+    <section id="tab-ads" class="admin-tab card hidden">
+      <h3 style="margin-bottom:14px;">إضافة حملة إعلانية / راعي</h3>
+      <form id="adminAdForm" class="grid-2">
+        <input id="aTitle" class="form-control" placeholder="اسم المعلن" required />
+        <input id="aImage" class="form-control" placeholder="رابط بانر الإعلان" required />
+        <input id="aUrl" class="form-control" placeholder="رابط الوجهة" required />
+        <button class="btn btn-primary" type="submit">تفعيل الحملة</button>
+      </form>
+    </section>
+
+    <!-- إرسال الإشعارات -->
+    <section id="tab-push" class="admin-tab card hidden">
+      <h3 style="margin-bottom:14px;">إرسال إشعار فوري للمستخدمين</h3>
+      <form id="adminPushForm" style="display:grid; gap:10px;">
+        <input id="pTitle" class="form-control" placeholder="عنوان الإشعار" required />
+        <input id="pBody" class="form-control" placeholder="نص الإشعار" required />
+        <input id="pTopic" class="form-control" value="all_users" placeholder="الموضوع (all_users أو team_id)" />
+        <button class="btn btn-primary" type="submit">إرسال الإشعار</button>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
